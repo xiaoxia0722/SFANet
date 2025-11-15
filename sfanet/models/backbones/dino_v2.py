@@ -190,21 +190,20 @@ class DinoVisionTransformer(BaseModule):
         self.head = nn.Identity()
 
         self.mask_token = nn.Parameter(torch.zeros(1, embed_dim))
-
+        
         self.san_classifier_0 = None
         self.san_classifier_1 = None
         self.san_classifier_2 = None
         self.san_classifier_3 = None
-
         self.san_stage_0 = None
         self.san_stage_1 = None
         self.san_stage_2 = None
         self.san_stage_3 = None
-
         self.saw_stage_0 = None
         self.saw_stage_1 = None
         self.saw_stage_2 = None
         self.saw_stage_3 = None
+
 
         if san or saw:
             self.san_classifier_0 = nn.Conv2d(embed_dim, num_classes, kernel_size=1, stride=1, bias=True)
@@ -397,6 +396,10 @@ class DinoVisionTransformer(BaseModule):
         ret1 = None
         ret2 = None
         ret3 = None
+        ret_0 = None
+        ret_1 = None
+        ret_2 = None
+        ret_3 = None
         ret_cp = []
         if isinstance(ret[0], torch.Tensor):
             for c in ret:
@@ -478,4 +481,6 @@ class DinoVisionTransformer(BaseModule):
             ret_cp[3] = F.interpolate(
                 ret_cp[3], scale_factor=0.5, mode="bilinear", align_corners=False
             )
-        return ret, [saw_loss_lay0, saw_loss_lay1, saw_loss_lay2, saw_loss_lay3], ret_cp, [self.san_stage_0, self.san_stage_1, self.san_stage_2, self.san_stage_3], [ret0, ret1, ret2, ret3]
+        # return ret, [saw_loss_lay0, saw_loss_lay1, saw_loss_lay2, saw_loss_lay3], ret_cp, [self.san_stage_0, self.san_stage_1, self.san_stage_2, self.san_stage_3], [ret0, ret1, ret2, ret3]
+        
+        return ret, [saw_loss_lay0, saw_loss_lay1, saw_loss_lay2, saw_loss_lay3], ret_cp, [self.san_stage_0, self.san_stage_1, self.san_stage_2, self.san_stage_3], [ret_0, ret_1, ret_2, ret_3]
