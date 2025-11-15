@@ -63,4 +63,36 @@ class SAW(nn.Module):
 
         return after_sort
 
+    def forward(self, x, classify):
+        weights_keys = classify.state_dict().keys()
+
+        selected_keys_classify = []
+
+        for key in weights_keys:
+            if "weight" in key:
+                selected_keys_classify.append(key)
+
+        for key in selected_keys_classify:
+            weights_t = classify.state_dict()[key]
+        classsifier_weights = abs(weights_t.squeeze())
+        _,index = torch.sort(classsifier_weights, descending=True,dim=1)
+
+        f_map_lst = []
+
+        weights_new = F.sigmoid(abs(weights_t))
+        for i in range(self.topk):
+            group = x[:, index[self.selected_classes, i]] * weights_new[self.selected_classes, index[self.selected_classes, i]]
+            f_map_lst.append(group)
+
+        eye, mask_matrix, margin, num_remove_cov = self.get_mask_matrix()
+        SAW_loss = torch.FloatTensor([0]).cuda()
+
+        # map2 = torch.concatenate(f_map_lst, dim=1)
+        for i in range(self.topk):
+            loss = self.instance_whitening_loss(f_map_lst[i], eye, mask_matrix, margin, num_remove_cov)
+            SAW_loss = SAW_loss+loss
+
+        # SAW_loss += self.instance_whitening_loss(map2, eye, mask_matrix, margin, num_remove_cov)
+
+        return SAW_loss
 

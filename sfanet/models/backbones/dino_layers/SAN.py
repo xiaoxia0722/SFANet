@@ -34,3 +34,24 @@ class SAN(nn.Module):
         self.mask_matrix = None
         self.resnet = resnet
 
+    def forward(self, x, masks):
+        outs = []
+        idx = 0
+        masks = F.softmax(masks, dim=1)
+        for index, i in enumerate(self.selected_classes):
+            mask = torch.unsqueeze(masks[:, i, :, :], 1)
+            mid = x * mask
+            avg_out = torch.mean(mid, dim=1, keepdim=True)
+            max_out, _ = torch.max(mid, dim=1, keepdim=True)
+            atten = torch.cat([avg_out, max_out, mask], dim=1)
+            atten = self.sigmoid(self.CFR_branches[index](atten))
+            out = mid * atten
+            out = self.IN_branches[index](out)
+            outs.append(out)
+        out_ = sum(outs)
+
+        if self.resnet:
+            out_ = out_ + x
+        out_ = self.relu(out_)
+
+        return out_
